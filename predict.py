@@ -7,6 +7,7 @@ import numpy as np
 from cog import BasePredictor, Input, Path, BaseModel, ConcatenateIterator
 import pprint as pp
 from llama_cpp import Llama
+from tqdm import tqdm
 
 
 class Predictor(BasePredictor):
@@ -34,16 +35,18 @@ class Predictor(BasePredictor):
     def predict(
         self,
         prompts: str = Input(
-            description="List of prompts, separated by prompt_separator"
+            description="List of prompts, separated by prompt_separator. Maximum 100 prompts per prediction."
         ),
         prompt_separator: str = Input(
             description="Separator between prompts", default="\n\n"
         ),
     ) -> List[List[float]]:
         prompts = prompts.split(prompt_separator)
+        if len(prompts) > 100:
+            raise ValueError("The maximum number of prompts per prediction is 100")
         print(f"Generating embeddings for {len(prompts)} prompts")
 
         outputs = []
-        for prompt in prompts:
+        for prompt in tqdm(prompts):
             outputs.append(self.llm.embed(prompt))
         return outputs
